@@ -194,12 +194,6 @@ async def entrypoint(ctx: JobContext):
     avatar = bey.AvatarSession(
         api_key=os.environ.get("BEYOND_PRESENCE_API_KEY"),
         avatar_id=os.environ.get("BEYOND_PRESENCE_AVATAR_ID"), 
-        options=bey.AvatarOptions(
-            quality="medium",  # Change from 'high' to 'medium' or 'low'
-            width=640,         # Lower resolution (default is often 1080p)
-            height=360,
-            fps=24             # Lower FPS (cinema standard, smooth enough)
-        )
     )
     
     # Start the avatar and wait for it to join
