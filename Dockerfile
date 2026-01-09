@@ -19,4 +19,4 @@ COPY sms_manager.py .
 COPY service_account.json . 
 
 # Run the agent
-CMD ["python", "agent.py", "start"]
+CMD ["python", "main.py", "start"]
