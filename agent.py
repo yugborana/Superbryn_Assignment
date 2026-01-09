@@ -41,7 +41,7 @@ class ClinicAssistant(Agent):
         groq_model = openai.LLM(
             base_url="https://api.groq.com/openai/v1",
             api_key=os.environ.get("GROQ_API_KEY"),
-            model="llama-3.3-70b-versatile",
+            model="meta-llama/llama-4-maverick-17b-128e-instruct - on_demand",
         )
 
         today = datetime.datetime.now().strftime("%A, %B %d, %Y")
