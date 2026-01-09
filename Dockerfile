@@ -15,7 +15,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy your actual code
 COPY agent.py .
 COPY gcal_manager.py .
-COPY email_manager.py .
+COPY sms_manager.py .
 COPY service_account.json . 
 
 # Run the agent

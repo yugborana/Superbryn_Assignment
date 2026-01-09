@@ -28,11 +28,11 @@ from livekit.plugins import (
 )
 
 from gcal_manager import GoogleCalendarManager
-from email_manager import EmailManager
+from sms_manager import SMSManager
 
 load_dotenv()
 db = GoogleCalendarManager()
-emailer = EmailManager()
+sms = SMSManager()
 
 logger = logging.getLogger("voice-agent")
 
@@ -57,12 +57,11 @@ class ClinicAssistant(Agent):
                 
                 "Strict Constraints & Flow:\n"
                 "1. DATA COLLECTION (One by One): \n"
-                "   - Do NOT ask for Name, Email, and Contact all at once.\n"
+                "   - Do NOT ask for Name and Contact all at once.\n"
                 "   - Step 1: Ask Name. Wait for reply.\n"
-                "   - Step 2: Ask Email. Wait for reply.\n"
-                "   - Step 3: Ask Phone. Wait for reply.\n"
-                "   - Step 4: Confirm Service Type. \n"
-                "   - Step 5: ONLY THEN call 'book_appointment'.\n"
+                "   - Step 2: Ask Phone. Wait for reply.\n"
+                "   - Step 3: Confirm Service Type. \n"
+                "   - Step 4: ONLY THEN call 'book_appointment'.\n"
                 
                 "2. SPEAKING STYLE:\n"
                 "   - DATES: Never say 'two zero two five'. Say 'October 25th'.\n"
@@ -119,8 +118,7 @@ class ClinicAssistant(Agent):
     async def book_appointment(
         self, 
         context: RunContext, 
-        name: str, 
-        email: str, 
+        name: str,  
         contact: str, 
         date: str, 
         time: str, 
@@ -130,7 +128,6 @@ class ClinicAssistant(Agent):
         Book a new appointment. 
         Args:
             name: Customer's full name.
-            email: Customer's email.
             contact: Phone number.
             date: Date (YYYY-MM-DD).
             time: Time (e.g., "10:00 AM").
@@ -139,12 +136,12 @@ class ClinicAssistant(Agent):
         logger.info(f"Booking for {name}")
         
         # ⚡ ASYNC WRAPPER: Prevent freezing while Google API works
-        booking_result = await asyncio.to_thread(db.book_appointment, name, contact, email, date, time, service)
+        booking_result = await asyncio.to_thread(db.book_appointment, name, contact, date, time, service)
         
         # ⚡ FIRE AND FORGET: Send email in background so user doesn't wait
         if "Success" in booking_result:
             asyncio.create_task(
-                asyncio.to_thread(emailer.send_confirmation, email, name, date, time, service)
+                asyncio.to_thread(sms.send_confirmation, sms, name, date, time, service)
             )
             
         return f"{booking_result}"

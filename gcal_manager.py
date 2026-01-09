@@ -112,7 +112,7 @@ class GoogleCalendarManager:
         print("   ⚠️ NO MATCH FOUND. Defaulting to 60 mins.")
         return 60 
 
-    def book_appointment(self, name: str, contact: str, email: str, date: str, time: str, service_type: str) -> str:
+    def book_appointment(self, name: str, contact: str, date: str, time: str, service_type: str) -> str:
         try:
             # 3. GET DURATION
             duration_minutes = self._get_duration(service_type)
@@ -133,7 +133,7 @@ class GoogleCalendarManager:
             event = {
                 'summary': f"{service_type.title()} - {name}",
                 'location': 'Clinic Main Office',
-                'description': f"Contact: {contact}\nEmail: {email}\nService: {service_type}\nDuration: {duration_minutes} mins",
+                'description': f"Contact: {contact}\nService: {service_type}\nDuration: {duration_minutes} mins",
                 'start': {'dateTime': start_iso, 'timeZone': TIMEZONE},
                 'end': {'dateTime': end_iso, 'timeZone': TIMEZONE},
                 'reminders': {

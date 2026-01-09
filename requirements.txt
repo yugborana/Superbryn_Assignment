@@ -5,6 +5,7 @@ livekit-plugins-openai
 livekit-plugins-silero
 livekit-plugins-bey
 livekit-plugins-noise-cancellation
+twilio
 google-auth
 google-api-python-client
 python-dotenv
