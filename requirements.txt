@@ -3,7 +3,7 @@ livekit-plugins-cartesia
 livekit-plugins-deepgram
 livekit-plugins-openai
 livekit-plugins-silero
-livekit-plugins-beyond-presence
+livekit-plugins-bey
 google-auth
 google-api-python-client
 python-dotenv
