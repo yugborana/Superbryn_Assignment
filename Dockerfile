@@ -13,10 +13,8 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy your actual code
-COPY agent.py .
-COPY gcal_manager.py .
-COPY sms_manager.py .
-COPY service_account.json . 
+COPY . . 
+
 
 # Run the agent
 CMD ["python", "main.py", "start"]

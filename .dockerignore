@@ -1,0 +1,20 @@
+# Ignore the Frontend Folder
+agent-starter-react-main/
+images/
+readme.md
+
+# Ignore Git history (saves massive space)
+.git/
+.gitignore
+
+# Ignore local python environments
+venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+
+# Ignore local environment secrets (Security best practice!)
+.env
+railway.json
+docker-compose.yml
