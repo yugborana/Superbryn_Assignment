@@ -23,7 +23,7 @@ class ClinicAssistant(Agent):
             groq_model = openai.LLM(
                 base_url="https://api.groq.com/openai/v1",
                 api_key=os.environ.get("GROQ_API_KEY"),
-                model="openai/gpt-oss-20b",
+                model="llama-3.3-70b-versatile",
             )
             
             # CARTESIA TTS SETUP:
