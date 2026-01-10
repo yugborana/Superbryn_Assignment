@@ -44,7 +44,7 @@ async def entrypoint(ctx: JobContext):
         return # Exit the session if we can't connect
 
     # 2. INITIALIZE AGENT LOGIC
-    my_agent = ClinicAssistant()
+    my_agent = ClinicAssistant(room=ctx.room)
 
     # 3. WAIT FOR HUMAN
     # The script pauses here until a user actually enters the room.
