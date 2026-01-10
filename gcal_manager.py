@@ -86,7 +86,7 @@ class GoogleCalendarManager:
         "general checkup": 30,
         "cleaning": 60,
         "dental cleaning": 60,
-        "root canal": 90,  # <--- This is the key one
+        "root canal": 90,  
         "surgery": 120,
         "extraction": 45,
         "consultation": 15,
