@@ -103,34 +103,55 @@ The Superbryn Clinic Voice Assistant is built as a real-time, event-driven voice
         TWILIO_AUTH_TOKEN = 
         TWILIO_PHONE_NUMBER = 
 
+## LLM Selection Rationale
 
-# Usage
-## Local Development
+Groq was selected as the primary Large Language Model (LLM) provider for this pipeline due to its performance, latency characteristics, and suitability for real-time voice applications.
+
+### Low Latency for Real-Time Interaction
+Voice-based systems require extremely fast response times to maintain natural conversation flow. Groq’s inference infrastructure is optimized for ultra-low latency token generation, which significantly reduces end-to-end response time and improves conversational responsiveness.
+
+### High Throughput and Consistent Performance
+The system must handle continuous streaming requests, interruptions, and rapid turn-taking. Groq provides stable throughput under load, ensuring predictable performance even during concurrent sessions.
+
+### Streaming-Friendly Architecture
+Groq supports efficient streaming responses, allowing partial outputs to be processed immediately. This enables early text-to-speech synthesis and minimizes perceived response delays.
+
+### Cost Efficiency at Scale
+Compared to traditional GPU-based inference, Groq’s architecture offers competitive cost efficiency for sustained real-time workloads, making it suitable for production deployment and scaling.
+
+### Reliability for Agent-Oriented Workflows
+The assistant relies on structured reasoning, tool invocation, and deterministic behavior. Groq delivers consistent outputs and stable API performance, which is critical for production-grade agent pipelines.
+
+### Seamless Integration
+Groq provides simple API integration with existing Python async workflows, allowing clean orchestration with LiveKit, speech services, and backend tools without complex infrastructure overhead.
+
+## Usage
+### Local Development
     1. Run the agent:
         python main.py dev
         
     2. The agent connects to your LiveKit room and starts listening to commands.
 
-## Docker Deployment
+### Docker Deployment
     1. Build the image:
         docker build -t superbryn-assistant .
     
     2. Run the container:
         docker run -e LIVEKIT_URL=your_url -e LIVEKIT_API_KEY=your_key -e LIVEKIT_API_SECRET=your_secret superbryn-assistant
 
-# Configuration
+## Configuration
 
-## Environment Variables
-All API keys are loaded from `.env` or system environment.
+### Environment Variables
+    - All API keys are loaded from `.env` or system environment.
 
-## Calendar Settings
-Update `CALENDAR_ID` in `gcal_manager.py` for your Google Calendar.
+### Calendar Settings
+    - Update `CALENDAR_ID` in `gcal_manager.py` for your Google Calendar.
 
-## Service Durations
-Modify the `SERVICES` dict in `gcal_manager.py` for custom appointment lengths.
+### Service Durations
+    - Modify the `SERVICES` dict in `gcal_manager.py` for custom appointment lengths.
 
-## Prompts
-Customize agent behavior in `prompts.py`.
+### Prompts
+    - Customize agent behavior in `prompts.py`.
 
 ---
 
