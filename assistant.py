@@ -10,10 +10,12 @@ from prompts import get_instructions
 
 class ClinicAssistant(Agent):
     def __init__(self, room: rtc.Room) -> None:
+        self.confirmed_bookings = []
         # --- 🛡️ MODEL INITIALIZATION ---
         # We wrap model setup in try-except because invalid API keys here crash the whole app.
         try:
             self.room = room
+            
 
             # GROQ LLM SETUP:
             # We use the 'openai' plugin structure but point the 'base_url' to Groq.
@@ -94,31 +96,21 @@ class ClinicAssistant(Agent):
 
     @function_tool()
     async def book_appointment(self, context: RunContext, name: str, contact: str, date: str, time: str, service: str) -> str:
-        """Book a new appointment."""
-        logger.info(f"Booking for {name}")
-
-        if not db: return "Calendar system unavailable."
-
+        if not db: return "System unavailable."
         try:
-            # Async wrapper for booking
-            booking_result = await asyncio.to_thread(db.book_appointment, name, contact, date, time, service)
+            res = await asyncio.to_thread(db.book_appointment, name, contact, date, time, service)
             
-            if "Success" in booking_result:
-                # ⚡ FIRE-AND-FORGET SMS:
-                # We do NOT wait for the SMS to send. We use 'create_task' to send it
-                # in the background. This allows the Agent to reply "Booked!" instantly.
-                if sms:
-                    asyncio.create_task(
-                        asyncio.to_thread(sms.send_confirmation, contact, name, date, time, service)
-                    )
-                else:
-                    logger.warning("SMS Manager not loaded, skipping SMS.")
+            if "Success" in res:
+                # 📝 TRACK BOOKING INSTANTLY
+                self.confirmed_bookings.append(f"{service} on {date} at {time} for {name}")
                 
-            return f"{booking_result}"
-
+                if sms:
+                    asyncio.create_task(asyncio.to_thread(sms.send_confirmation, contact, name, date, time, service))
+            
+            return res
         except Exception as e:
-            logger.error(f"Booking Critical Failure: {e}")
-            return "I failed to process the booking due to a system error."
+            logger.error(f"Booking Error: {e}")
+            return "Booking failed."
 
     @function_tool()
     async def cancel_appointment(self, context: RunContext, name: str, date: str, time: str) -> str:
@@ -142,45 +134,81 @@ class ClinicAssistant(Agent):
 
     @function_tool()
     async def end_conversation(self, context: RunContext, should_end: bool = True) -> str:
-        """Ends the conversation and sends a summary to the chat."""
-        logger.info("Ending conversation requested.")
+        """Ends the conversation and displays a smart summary."""
+        logger.info("Generating Final Summary...")
         
-        # 1. GENERATE SUMMARY USING LLM
+        # 1. Get Timestamp
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        # 2. Format Bookings (Instant)
+        if self.confirmed_bookings:
+            booking_text = "\n".join([f"✅ {b}" for b in self.confirmed_bookings])
+        else:
+            booking_text = "❌ No appointments booked."
+
+        # 3. Generate Discussion & Preferences (Fast LLM Call)
+        discussion_summary = "No discussion details."
+        preferences = "None detected."
+
         if self.chat_ctx:
-            # Prepare a prompt to summarize the history
+            # We create a specific prompt for the LLM to extract ONLY what we need
+            # Using 'llama-3.1-8b-instant' on Groq, this takes ~0.5 seconds.
             summary_prompt = (
-                "Summarize the conversation in a JSON format with keys: "
-                "customer_name, action, date, time. "
-                "Do not add any markdown formatting."
+                "Analyze the chat history. Output ONLY a valid JSON object with two keys: "
+                "'summary' (1 sentence on what was discussed) and "
+                "'preferences' (list user preferences like 'mornings only', 'hates mondays', etc. or 'None')."
             )
             
-            # Create a temporary context with the system prompt + history
             summary_ctx = llm.ChatContext().append(
                 role=llm.ChatRole.SYSTEM, 
                 text=summary_prompt
             )
+            # Add recent history (Limit to last 6 messages for speed if needed)
             summary_ctx.messages.extend(self.chat_ctx.messages)
-            
+
             try:
-                # Ask LLM to generate summary
+                # Ask LLM
                 stream = await self.llm.chat(chat_ctx=summary_ctx)
-                full_summary = ""
+                raw_response = ""
                 async for chunk in stream:
                     if chunk.choices and chunk.choices[0].delta.content:
-                        content = chunk.choices[0].delta.content
-                        full_summary += content
+                        raw_response += chunk.choices[0].delta.content
                 
-                # 2. SEND TO LIVEKIT CHAT (The Fix)
-                # We publish data to the room. The 'topic' helps the frontend know it's a chat message.
-                logger.info(f"Sending Summary to Chat: {full_summary}")
-                
-                await self.room.local_participant.publish_data(
-                    payload=full_summary.encode("utf-8"), # ⚠️ Must encode string to bytes
-                    topic="chat",                         # Standard topic for chat
-                    reliable=True                         # Ensure it arrives
-                )
-                
+                # Try to parse JSON (Simple parsing logic)
+                import json
+                # Find the first '{' and last '}' to handle potential extra text
+                start = raw_response.find('{')
+                end = raw_response.rfind('}') + 1
+                if start != -1 and end != -1:
+                    data = json.loads(raw_response[start:end])
+                    discussion_summary = data.get("summary", discussion_summary)
+                    prefs = data.get("preferences", [])
+                    if isinstance(prefs, list) and prefs:
+                        preferences = ", ".join(prefs)
+                    elif isinstance(prefs, str):
+                        preferences = prefs
+
             except Exception as e:
-                logger.error(f"Failed to generate/send summary: {e}")
+                logger.error(f"LLM Summary Failed: {e}")
+
+        # 4. Construct Final Display Message
+        final_display = (
+            f"📝 **CALL SUMMARY**\n"
+            f"🕒 Time: {timestamp}\n\n"
+            f"📌 **Discussion**: {discussion_summary}\n"
+            f"❤️ **Preferences**: {preferences}\n\n"
+            f"📅 **Appointments**:\n{booking_text}"
+        )
+
+        # 5. Send to UI (Before Ending)
+        try:
+            logger.info(f"Publishing Summary to UI...")
+            await self.room.local_participant.publish_data(
+                payload=final_display.encode("utf-8"), 
+                topic="chat",
+                reliable=True
+            )
+        except Exception as e:
+            logger.error(f"Failed to publish summary: {e}")
 
         return "TERMINATE"
