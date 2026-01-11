@@ -1,7 +1,6 @@
 import datetime
 import logging
 
-# Initialize a specific logger for this module to track prompt generation issues
 logger = logging.getLogger("prompts")
 
 def get_instructions():

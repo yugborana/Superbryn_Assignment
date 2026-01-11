@@ -6,7 +6,6 @@ logger = logging.getLogger("sms-manager")
 
 class SMSManager:
     def __init__(self):
-        # 1. Load Twilio Credentials from Railway Environment
         self.sid = os.environ.get("TWILIO_ACCOUNT_SID")
         self.token = os.environ.get("TWILIO_AUTH_TOKEN")
         self.from_number = os.environ.get("TWILIO_PHONE_NUMBER")
@@ -15,11 +14,11 @@ class SMSManager:
         if self.sid and self.token and self.from_number:
             try:
                 self.client = Client(self.sid, self.token)
-                logger.info("✅ Twilio Client Initialized")
+                logger.info("Twilio Client Initialized")
             except Exception as e:
-                logger.error(f"❌ Twilio Init Failed: {e}")
+                logger.error(f"Twilio Init Failed: {e}")
         else:
-            logger.warning("⚠️ Twilio Credentials missing! SMS will be simulated.")
+            logger.warning("Twilio Credentials missing! SMS will be simulated.")
 
     def _format_indian_number(self, number: str) -> str:
         """
@@ -51,11 +50,11 @@ class SMSManager:
             f"📍 123 Health St, Clinic Main Office."
         )
 
-        logger.info(f"📩 Preparing SMS for {formatted_number}")
+        logger.info(f"Preparing SMS for {formatted_number}")
 
         # 2. Simulation Mode (If keys are missing)
         if not self.client:
-            logger.info(f"📝 [SIMULATION] Sending to {formatted_number}: {message_body}")
+            logger.info(f"[SIMULATION] Sending to {formatted_number}: {message_body}")
             return "SMS Simulated (Check Railway Variables)"
 
         # 3. Send Real SMS
@@ -67,5 +66,5 @@ class SMSManager:
             )
             return f"SMS Sent! ID: {message.sid}"
         except Exception as e:
-            logger.error(f"❌ Twilio Error: {e}")
+            logger.error(f"Twilio Error: {e}")
             return f"Error sending SMS: {str(e)}"

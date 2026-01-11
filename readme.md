@@ -1,4 +1,4 @@
-[Live Demo](assignment121.up.railway.app)
+Live Demo - https://assignment121.up.railway.app/
 
 # Superbryn Clinic Voice Assistant
 
@@ -87,23 +87,23 @@ The Superbryn Clinic Voice Assistant is built as a real-time, event-driven voice
     - Place your_service_account.json in the root directory for Google Calendar access.
 
     - .env structure:    
-        LIVEKIT_URL=
-        LIVEKIT_API_KEY=
-        LIVEKIT_API_SECRET=
+        - LIVEKIT_URL=
+        - LIVEKIT_API_KEY=
+        - LIVEKIT_API_SECRET=
 
-        CARTESIA_API_KEY = 
-        DEEPGRAM_API_KEY = 
-        GROQ_API_KEY = 
+        - CARTESIA_API_KEY = 
+        - DEEPGRAM_API_KEY = 
+        - GROQ_API_KEY = 
 
-        BEYOND_PRESENCE_API_KEY =
-        BEYOND_PRESENCE_AVATAR_ID =
+        - BEYOND_PRESENCE_API_KEY =
+        - BEYOND_PRESENCE_AVATAR_ID =
 
-        GOOGLE_CALENDAR_CLIENT_ID = 
-        GOOGLE_CALENDAR_CLIENT_SECRET = 
+        - GOOGLE_CALENDAR_CLIENT_ID = 
+        - GOOGLE_CALENDAR_CLIENT_SECRET = 
 
-        TWILIO_ACCOUNT_SID = 
-        TWILIO_AUTH_TOKEN = 
-        TWILIO_PHONE_NUMBER = 
+        - TWILIO_ACCOUNT_SID = 
+        - TWILIO_AUTH_TOKEN = 
+        - TWILIO_PHONE_NUMBER = 
 
 ## LLM Selection Rationale
 
@@ -157,7 +157,7 @@ Groq provides simple API integration with existing Python async workflows, allow
 
 ---
 
-# Project Structure
+## Project Structure
 
 - **main.py** – Entry point and LiveKit session management.  
 - **assistant.py** – Core agent logic with tools for appointment management.  
@@ -171,6 +171,11 @@ Groq provides simple API integration with existing Python async workflows, allow
 - **requirements.txt** – Python dependencies.  
 
 ---
+
+## Challenges
+ - Hallucinations & "Rushing"
+ - Dependency & Cost Management
+
 
 # Contributing
 

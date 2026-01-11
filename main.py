@@ -25,7 +25,7 @@ def prewarm(proc: JobProcess):
     try:
         proc.userdata["vad"] = silero.VAD.load()
     except Exception as e:
-        logger.warning(f"⚠️ VAD Prewarm failed: {e}. It will load lazily later.")
+        logger.warning(f"VAD Prewarm failed: {e}. It will load lazily later.")
 
 async def entrypoint(ctx: JobContext):
     """
@@ -40,7 +40,7 @@ async def entrypoint(ctx: JobContext):
         # user's video feed (if any), saving massive bandwidth on the server.
         await ctx.connect(auto_subscribe=AutoSubscribe.AUDIO_ONLY)
     except Exception as e:
-        logger.critical(f"❌ Failed to connect to LiveKit Room: {e}")
+        logger.critical(f"Failed to connect to LiveKit Room: {e}")
         return # Exit the session if we can't connect
 
     # 2. INITIALIZE AGENT LOGIC
@@ -57,7 +57,7 @@ async def entrypoint(ctx: JobContext):
         usage_collector.collect(agent_metrics)
 
     # 5. CONFIGURE SESSION & VAD
-    # 🛡️ Fallback: If prewarm failed, VAD might be missing. We check and load it now if needed.
+    #Fallback: If prewarm failed, VAD might be missing. We check and load it now if needed.
     vad_instance = ctx.proc.userdata.get("vad")
     if not vad_instance:
         logger.info("Loading VAD lazily...")
@@ -73,7 +73,7 @@ async def entrypoint(ctx: JobContext):
     )
     session.on("metrics_collected", on_metrics_collected)
 
-    # --- 🛡️ AVATAR ERROR HANDLING (Graceful Degradation) ---
+    # --- AVATAR ERROR HANDLING (Graceful Degradation) ---
     # The Avatar is the heaviest component (Video Stream).
     # If it fails (bad internet, invalid key), we catch the error so the 
     # Voice Agent can still work (Voice Only) instead of crashing entirely.
@@ -87,11 +87,11 @@ async def entrypoint(ctx: JobContext):
             # Starts the video stream in the room
             await avatar.start(session, room=ctx.room)
         else:
-            logger.warning("⚠️ Avatar Keys missing. Starting in Voice-Only mode.")
+            logger.warning("Avatar Keys missing. Starting in Voice-Only mode.")
             
     except Exception as e:
-        logger.error(f"❌ Avatar failed to start: {e}")
-        logger.info("⚠️ Continuing in Voice-Only mode (Graceful Degradation).")
+        logger.error(f"Avatar failed to start: {e}")
+        logger.info("Continuing in Voice-Only mode (Graceful Degradation).")
 
     # 6. DISCONNECT HANDLER
     # When the call ends, this triggers to save the conversation summary.
@@ -119,7 +119,7 @@ async def entrypoint(ctx: JobContext):
             ),
         )
     except Exception as e:
-        logger.critical(f"❌ Agent Session Crashed: {e}")
+        logger.critical(f"Agent Session Crashed: {e}")
 
 if __name__ == "__main__":
     # The standard entry point. 'cli.run_app' handles the worker process 

@@ -4,8 +4,6 @@ import datetime
 import asyncio 
 from dotenv import load_dotenv
 
-# --- LIVEKIT AGENT FRAMEWORK ---
-# Core classes for building the voice agent worker
 from livekit.agents import (
     Agent,
     AgentSession,
@@ -21,14 +19,6 @@ from livekit.agents import (
     RunContext,
 )
 
-# --- AI PLUGINS ---
-# Integrations for specific AI services:
-# cartesia: Fast Text-to-Speech (TTS)
-# openai: Used here as the client interface for Groq (LLM)
-# deepgram: Fast Speech-to-Text (STT)
-# noise_cancellation: LiveKit's audio cleaning
-# silero: Voice Activity Detection (VAD) to know when user speaks
-# bey: Beyond Presence (Avatar) integration
 from livekit.plugins import (
     cartesia,
     openai,
@@ -38,30 +28,22 @@ from livekit.plugins import (
     bey
 )
 
-# --- CUSTOM MANAGERS ---
-# Helper classes for Calendar and SMS logic
 from gcal_manager import GoogleCalendarManager
 from sms_manager import SMSManager
 
-# Load environment variables (API Keys, etc.) from .env file
 load_dotenv()
 
-# Initialize external services globally to reuse connections
 db = GoogleCalendarManager()
 sms = SMSManager()
 
-# Setup logging to track agent behavior in the console
 logger = logging.getLogger("voice-agent")
 
 class ClinicAssistant(Agent):
     def __init__(self) -> None:
-        # --- LLM CONFIGURATION (Groq) ---
-        # Using Groq for ultra-low latency inference.
-        # We use the 'openai' plugin but point it to Groq's base_url.
         groq_model = openai.LLM(
             base_url="https://api.groq.com/openai/v1",
             api_key=os.environ.get("GROQ_API_KEY"),
-            model="meta-llama/llama-4-scout-17b-16e-instruct", # Specific Llama model optimized for instruction following
+            model="meta-llama/llama-4-scout-17b-16e-instruct", 
         )
 
         # dynamic variable for the system prompt so the AI knows "Today"
@@ -80,31 +62,27 @@ class ClinicAssistant(Agent):
                 
                 "Strict Constraints & Flow:\n"
                 "1. CHECK FIRST:\n"
-                # CRITICAL: Prevents hallucinating availability. AI must use the tool first.
                 "   - ALWAYS check availability for the requested date/time.\n"
                 "   - If available, SAY: 'That slot is open. Shall I book it?'\n"
                 "   - STOP and WAIT for the user to say 'Yes' or 'No'.\n"
                 
                 "2. NEW REQUEST OVERRIDE:\n"
-                # Handles context switching if user changes mind mid-flow
                 "   - If the user asks for a DIFFERENT time/date, FORGET the old slot.\n"
                 "   - Check the NEW slot immediately.\n"
                 
                 "3. DATA COLLECTION (Only after User says 'Yes' to a slot): \n"
-                # Enforces step-by-step data gathering to avoid overwhelming the STT/User
                 "   - Step 1: Ask Name. Wait.\n"
                 "   - Step 2: Ask Phone Number. Wait.\n"
                 "   - Step 3: Confirm Service Type. \n"
                 "   - Step 4: ONLY THEN call 'book_appointment'.\n"
                 
                 "4. SPEAKING STYLE:\n"
-                # TTS Optimizations: 2025 -> October 25th sounds better naturally
                 "   - DATES: Say 'October 25th', not '2025-10-25'.\n"
                 "   - TIMES: Say '2 PM', not '14:00'.\n"
                 "   - BREVITY: Keep answers < 15 words.\n"
             ),
-            stt=deepgram.STT(), # Speech-to-Text
-            llm=groq_model,     # Logic
+            stt=deepgram.STT(),
+            llm=groq_model,
             # --- TTS OPTIMIZATION (Cartesia) ---
             # Configured specifically for low latency and speed
             tts=cartesia.TTS(
@@ -125,14 +103,13 @@ class ClinicAssistant(Agent):
         )
 
     # --- TOOLS (Capabilities) ---
-    # These functions allow the LLM to interact with the outside world (Calendar, SMS)
 
     @function_tool()
     async def check_availability(self, context: RunContext, date: str) -> str:
         """Check available slots for a date (YYYY-MM-DD)."""
         logger.info(f"Checking availability for {date}")
         
-        # ⚡ ASYNC WRAPPER: CRITICAL FOR PERFORMANCE
+        # ASYNC WRAPPER:
         # The 'db.check_availability' method is blocking (synchronous).
         # We wrap it in 'asyncio.to_thread' so the Agent doesn't freeze while waiting for Google.
         slots = await asyncio.to_thread(db.check_availability, date)
@@ -169,13 +146,12 @@ class ClinicAssistant(Agent):
         """
         logger.info(f"Booking for {name}")
         
-        # ⚡ ASYNC DB CALL: Prevents audio stuttering during booking
+        # ASYNC DB CALL: Prevents audio stuttering during booking
         booking_result = await asyncio.to_thread(db.book_appointment, name, contact, date, time, service)
         
-        # ⚡ FIRE AND FORGET SMS
+        # FIRE AND FORGET SMS
         # We use 'create_task' to send the SMS in the background.
         # The Agent can reply "Booked!" to the user immediately without waiting for Twilio.
-        # NOTE: Passed 'contact' as the first arg for SMS (fixed typo in original logic)
         if "Success" in booking_result:
             asyncio.create_task(
                 asyncio.to_thread(sms.send_confirmation, contact, name, date, time, service)
@@ -194,13 +170,11 @@ class ClinicAssistant(Agent):
     async def modify_appointment(self, context: RunContext, name: str, old_date: str, old_time: str, new_date: str, new_time: str) -> str:
         """Reschedule/Modify an appointment."""
         logger.info(f"Modifying for {name}")
-        # Standard async wrapper for rescheduling
         return await asyncio.to_thread(db.modify_appointment, name, old_date, old_time, new_date, new_time)
 
     @function_tool()
     async def end_conversation(self, context: RunContext, should_end: bool = True) -> str:
         """Ends the conversation."""
-        # A keyword 'TERMINATE' can be used by the framework to close the room
         return "TERMINATE"
 
 
@@ -275,7 +249,6 @@ async def entrypoint(ctx: JobContext):
     )
 
 if __name__ == "__main__":
-    # Entry point for the Python script
     # Starts the worker which listens for LiveKit jobs
     cli.run_app(
         WorkerOptions(

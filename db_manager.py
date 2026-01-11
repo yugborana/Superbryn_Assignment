@@ -91,8 +91,6 @@ class AppointmentManager:
         self._save_db(data)
         return "Success: Appointment confirmed."
 
-    # --- NEW FUNCTIONS ---
-
     def cancel_appointment(self, name: str, date: str, time: str) -> str:
         """Cancel an appointment by setting status to 'cancelled'."""
         data = self._load_db()

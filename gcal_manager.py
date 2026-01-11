@@ -22,7 +22,7 @@ class GoogleCalendarManager:
                 SERVICE_ACCOUNT_FILE, scopes=SCOPES
             )
         else:
-            logger.error("❌ service_account.json not found!")
+            logger.error("service_account.json not found!")
             raise FileNotFoundError("service_account.json missing")
 
         self.service = build('calendar', 'v3', credentials=self.creds)
@@ -100,16 +100,15 @@ class GoogleCalendarManager:
         
         s = service_text.lower().strip()
         
-        # Debug print to see what the Agent is passing
-        print(f"🔍 CHECKING DURATION FOR: '{s}'")
+        print(f"CHECKING DURATION FOR: '{s}'")
 
         # 1. Check if the key is inside the text (e.g. "root canal" is in "root canal therapy")
         for key, duration in self.SERVICES.items():
             if key in s:
-                print(f"   ✅ MATCHED: '{key}' -> {duration} mins")
+                print(f"MATCHED: '{key}' -> {duration} mins")
                 return duration
         
-        print("   ⚠️ NO MATCH FOUND. Defaulting to 60 mins.")
+        print("NO MATCH FOUND. Defaulting to 60 mins.")
         return 60 
 
     def book_appointment(self, name: str, contact: str, date: str, time: str, service_type: str) -> str:
@@ -234,7 +233,7 @@ class GoogleCalendarManager:
                     elif "Contact:" in line:
                         contact = line.split("Contact:")[1].strip()
 
-            print(f"♻️ RESCHEDULING: Found '{service_type}' for {name}. Moving to {new_date} {new_time}.")
+            print(f"RESCHEDULING: Found '{service_type}' for {name}. Moving to {new_date} {new_time}.")
 
             # 3. DELETE OLD EVENT
             self.service.events().delete(calendarId=CALENDAR_ID, eventId=target_event['id']).execute()
