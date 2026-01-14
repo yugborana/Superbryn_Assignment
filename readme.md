@@ -1,5 +1,7 @@
 Live Demo - https://assignment121.up.railway.app/
 
+Video - https://drive.google.com/file/d/1x416cj1kOf6okW3n_Afj8EWDyI_OR-iN/view?usp=drivesdk
+
 # Clinic Voice Assistant
 
 A real-time voice assistant for clinic appointment management, built with LiveKit, Groq LLM, Cartesia TTS, and integrated with Google Calendar and Twilio SMS.
